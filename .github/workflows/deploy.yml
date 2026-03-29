@@ -1,0 +1,80 @@
+name: Deploy to Mattermost
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Extract plugin metadata
+        id: meta
+        run: |
+          PLUGIN_ID=$(jq -r .id plugin.json)
+          PLUGIN_VERSION=$(jq -r .version plugin.json)
+          echo "plugin_id=$PLUGIN_ID" >> "$GITHUB_OUTPUT"
+          echo "plugin_version=$PLUGIN_VERSION" >> "$GITHUB_OUTPUT"
+          echo "bundle_name=${PLUGIN_ID}-${PLUGIN_VERSION}.tar.gz" >> "$GITHUB_OUTPUT"
+
+      - name: Build server (linux-amd64)
+        run: |
+          mkdir -p server/dist
+          cd server && env GOOS=linux GOARCH=amd64 go build -trimpath -o dist/plugin-linux-amd64
+
+      - name: Bundle plugin
+        run: |
+          mkdir -p "dist/${{ steps.meta.outputs.plugin_id }}"
+          cp plugin.json "dist/${{ steps.meta.outputs.plugin_id }}/"
+          if [ -d assets ]; then cp -r assets "dist/${{ steps.meta.outputs.plugin_id }}/"; fi
+          if [ -d public ]; then cp -r public "dist/${{ steps.meta.outputs.plugin_id }}/"; fi
+          if [ -d server/dist ]; then
+            mkdir -p "dist/${{ steps.meta.outputs.plugin_id }}/server"
+            cp -r server/dist "dist/${{ steps.meta.outputs.plugin_id }}/server/"
+          fi
+          cd dist && tar -cvzf "${{ steps.meta.outputs.bundle_name }}" "${{ steps.meta.outputs.plugin_id }}"
+          echo "Bundle: dist/${{ steps.meta.outputs.bundle_name }}"
+
+      - name: Upload plugin
+        env:
+          MM_SITEURL: ${{ secrets.MM_SERVICESETTINGS_SITEURL }}
+          MM_TOKEN: ${{ secrets.MM_ADMIN_TOKEN }}
+        run: |
+          echo "Uploading ${{ steps.meta.outputs.bundle_name }} to $MM_SITEURL ..."
+          STATUS=$(curl -s -o /tmp/upload_response.json -w "%{http_code}" \
+            -H "Authorization: Bearer $MM_TOKEN" \
+            -F "plugin=@dist/${{ steps.meta.outputs.bundle_name }}" \
+            "$MM_SITEURL/api/v4/plugins/upload")
+          echo "Upload response ($STATUS):"
+          cat /tmp/upload_response.json
+          if [ "$STATUS" -ne 201 ]; then
+            echo "::error::Upload failed with HTTP $STATUS"
+            exit 1
+          fi
+
+      - name: Enable plugin
+        env:
+          MM_SITEURL: ${{ secrets.MM_SERVICESETTINGS_SITEURL }}
+          MM_TOKEN: ${{ secrets.MM_ADMIN_TOKEN }}
+        run: |
+          echo "Enabling ${{ steps.meta.outputs.plugin_id }} ..."
+          STATUS=$(curl -s -o /tmp/enable_response.json -w "%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer $MM_TOKEN" \
+            "$MM_SITEURL/api/v4/plugins/${{ steps.meta.outputs.plugin_id }}/enable")
+          echo "Enable response ($STATUS):"
+          cat /tmp/enable_response.json
+          if [ "$STATUS" -ne 200 ]; then
+            echo "::error::Enable failed with HTTP $STATUS"
+            exit 1
+          fi
+          echo "Plugin deployed and enabled successfully!"
