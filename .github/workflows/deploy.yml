@@ -53,7 +53,7 @@ jobs:
           STATUS=$(curl -s -o /tmp/upload_response.json -w "%{http_code}" \
             -H "Authorization: Bearer $MM_TOKEN" \
             -F "plugin=@dist/${{ steps.meta.outputs.bundle_name }}" \
-            "$MM_SITEURL/api/v4/plugins/upload")
+            "$MM_SITEURL/api/v4/plugins/upload?force=true")
           echo "Upload response ($STATUS):"
           cat /tmp/upload_response.json
           if [ "$STATUS" -ne 201 ]; then
