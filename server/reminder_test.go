@@ -25,7 +25,7 @@ func TestTriggerReminders(t *testing.T) {
 		api := &plugintest.API{}
 		api.On("KVGet", string("LastTickAt")).Return(serializedLastTickAt, nil)
 		api.On("KVSet", string("LastTickAt"), serializedTestTime).Return(nil)
-		api.On("LogDebug", "Trigger reminders for "+fmt.Sprintf("%v", testTime))
+		api.On("LogInfo", "Trigger reminders for "+fmt.Sprintf("%v", testTime))
 		api.On("KVGet", string(fmt.Sprintf("%v", testTime))).Return(nil, nil)
 		defer api.AssertExpectations(t)
 
@@ -45,13 +45,13 @@ func TestTriggerReminders(t *testing.T) {
 		api := &plugintest.API{}
 		api.On("KVGet", string("LastTickAt")).Return(serializedLastTickAt, nil)
 		api.On("KVSet", string("LastTickAt"), serializedTestTime).Return(nil)
-		api.On("LogDebug", "Catching up on 2 reminder tick(s)...")
-		api.On("LogDebug", "Trigger reminders for "+fmt.Sprintf("%v", testTime.Add(twoSecondsAgo)))
+		api.On("LogInfo", "Catching up on 2 reminder tick(s)...")
+		api.On("LogInfo", "Trigger reminders for "+fmt.Sprintf("%v", testTime.Add(twoSecondsAgo)))
 		api.On("KVGet", string(fmt.Sprintf("%v", testTime.Add(twoSecondsAgo)))).Return(nil, nil)
-		api.On("LogDebug", "Trigger reminders for "+fmt.Sprintf("%v", testTime.Add(oneSecondsAgo)))
+		api.On("LogInfo", "Trigger reminders for "+fmt.Sprintf("%v", testTime.Add(oneSecondsAgo)))
 		api.On("KVGet", string(fmt.Sprintf("%v", testTime.Add(oneSecondsAgo)))).Return(nil, nil)
-		api.On("LogDebug", "Caught up on missed reminder ticks.")
-		api.On("LogDebug", "Trigger reminders for "+fmt.Sprintf("%v", testTime))
+		api.On("LogInfo", "Caught up on missed reminder ticks.")
+		api.On("LogInfo", "Trigger reminders for "+fmt.Sprintf("%v", testTime))
 		api.On("KVGet", string(fmt.Sprintf("%v", testTime))).Return(nil, nil)
 		defer api.AssertExpectations(t)
 
@@ -132,6 +132,7 @@ func TestTriggerRemindersForTick(t *testing.T) {
 		stringOccurrences, _ := json.Marshal(occurrences)
 		api := &plugintest.API{}
 		api.On("LogDebug", mock.Anything, mock.Anything, mock.Anything).Maybe()
+		api.On("LogInfo", mock.Anything).Maybe()
 		api.On("KVGet", string(fmt.Sprintf("%v", testTime))).Return(stringOccurrences, nil)
 		defer api.AssertExpectations(t)
 
