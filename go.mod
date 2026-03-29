@@ -1,4 +1,4 @@
-module github.com/quantv/mattermost-plugin-remind
+module github.com/perelin/mattermost-plugin-remind
 
 go 1.24.11
 
