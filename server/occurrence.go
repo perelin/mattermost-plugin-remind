@@ -989,6 +989,24 @@ func (p *Plugin) everyEN(when string, user *model.User) (times []time.Time, err 
 	if chronoDate == T("weekday") || chronoDate == T("weekdays") {
 		chronoDate = T("monday") + "," + T("tuesday") + "," + T("wednesday") + "," + T("thursday") + "," + T("friday")
 	}
+
+	// Handle "every year on <date>" and "every month on <date>"
+	if strings.HasPrefix(chronoDate, T("year")+" ") || strings.HasPrefix(chronoDate, T("month")+" ") {
+		chronoDate = strings.TrimPrefix(chronoDate, T("year"))
+		chronoDate = strings.TrimPrefix(chronoDate, T("month"))
+		chronoDate = strings.Trim(chronoDate, " ")
+		// Remove optional filler words: "on", "the", "of"
+		for _, filler := range []string{T("on") + " ", "the ", T("of") + " "} {
+			chronoDate = strings.TrimPrefix(chronoDate, filler)
+		}
+		chronoDate = strings.Trim(chronoDate, " ")
+		// Handle "20th of april" → rearrange to "april 20th"
+		ofParts := strings.SplitN(chronoDate, " "+T("of")+" ", 2)
+		if len(ofParts) == 2 {
+			chronoDate = strings.Trim(ofParts[1], " ") + " " + strings.Trim(ofParts[0], " ")
+		}
+	}
+
 	days := p.regSplit(chronoDate, "("+T("and")+")|(,)")
 
 	for _, chrono := range days {

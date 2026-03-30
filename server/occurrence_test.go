@@ -619,6 +619,47 @@ func TestEvery(t *testing.T) {
 			assert.True(t, times[0].In(location).Month() == 1 && times[0].In(location).Day() == 30 &&
 				times[1].In(location).Month() == 9 && times[1].In(location).Day() == 30 && times[0].In(location).Hour() == 12)
 		}
+
+		// "every year" tests
+		times, err = p.everyEN("every year on April 20th", user)
+		assert.Nil(t, err)
+		assert.Equal(t, 1, len(times))
+		assert.Equal(t, time.April, times[0].In(location).Month())
+		assert.Equal(t, 20, times[0].In(location).Day())
+		assert.Equal(t, 9, times[0].In(location).Hour()) // default 9:00AM
+
+		times, err = p.everyEN("every year on the 20th of April", user)
+		assert.Nil(t, err)
+		assert.Equal(t, 1, len(times))
+		assert.Equal(t, time.April, times[0].In(location).Month())
+		assert.Equal(t, 20, times[0].In(location).Day())
+
+		times, err = p.everyEN("every year on December 25th at noon", user)
+		assert.Nil(t, err)
+		assert.Equal(t, 1, len(times))
+		assert.Equal(t, time.December, times[0].In(location).Month())
+		assert.Equal(t, 25, times[0].In(location).Day())
+		assert.Equal(t, 12, times[0].In(location).Hour())
+
+		times, err = p.everyEN("every year on January 1st at 8:30am", user)
+		assert.Nil(t, err)
+		assert.Equal(t, 1, len(times))
+		assert.Equal(t, time.January, times[0].In(location).Month())
+		assert.Equal(t, 1, times[0].In(location).Day())
+		assert.Equal(t, 8, times[0].In(location).Hour())
+		assert.Equal(t, 30, times[0].In(location).Minute())
+
+		// "every month" tests
+		times, err = p.everyEN("every month on the 15th", user)
+		assert.Nil(t, err)
+		assert.Equal(t, 1, len(times))
+		assert.Equal(t, 15, times[0].In(location).Day())
+
+		times, err = p.everyEN("every month on the 1st at 10:00am", user)
+		assert.Nil(t, err)
+		assert.Equal(t, 1, len(times))
+		assert.Equal(t, 1, times[0].In(location).Day())
+		assert.Equal(t, 10, times[0].In(location).Hour())
 	})
 }
 
