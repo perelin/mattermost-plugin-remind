@@ -71,7 +71,7 @@ func (p *Plugin) TriggerReminders() {
 }
 
 func (p *Plugin) TriggerRemindersForTick(tickAt time.Time) {
-	p.API.LogInfo("Trigger reminders for " + fmt.Sprintf("%v", tickAt))
+	p.API.LogDebug("Trigger reminders for " + fmt.Sprintf("%v", tickAt))
 
 	// Look up reminders to be triggered for the tick time
 	bytes, err := p.API.KVGet(string(fmt.Sprintf("%v", tickAt)))

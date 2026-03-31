@@ -25,7 +25,7 @@ func TestTriggerReminders(t *testing.T) {
 		api := &plugintest.API{}
 		api.On("KVGet", string("LastTickAt")).Return(serializedLastTickAt, nil)
 		api.On("KVSet", string("LastTickAt"), serializedTestTime).Return(nil)
-		api.On("LogInfo", "Trigger reminders for "+fmt.Sprintf("%v", testTime))
+		api.On("LogDebug", "Trigger reminders for "+fmt.Sprintf("%v", testTime))
 		api.On("KVGet", string(fmt.Sprintf("%v", testTime))).Return(nil, nil)
 		defer api.AssertExpectations(t)
 
@@ -46,12 +46,12 @@ func TestTriggerReminders(t *testing.T) {
 		api.On("KVGet", string("LastTickAt")).Return(serializedLastTickAt, nil)
 		api.On("KVSet", string("LastTickAt"), serializedTestTime).Return(nil)
 		api.On("LogInfo", "Catching up on 2 reminder tick(s)...")
-		api.On("LogInfo", "Trigger reminders for "+fmt.Sprintf("%v", testTime.Add(twoSecondsAgo)))
+		api.On("LogDebug", "Trigger reminders for "+fmt.Sprintf("%v", testTime.Add(twoSecondsAgo)))
 		api.On("KVGet", string(fmt.Sprintf("%v", testTime.Add(twoSecondsAgo)))).Return(nil, nil)
-		api.On("LogInfo", "Trigger reminders for "+fmt.Sprintf("%v", testTime.Add(oneSecondsAgo)))
+		api.On("LogDebug", "Trigger reminders for "+fmt.Sprintf("%v", testTime.Add(oneSecondsAgo)))
 		api.On("KVGet", string(fmt.Sprintf("%v", testTime.Add(oneSecondsAgo)))).Return(nil, nil)
 		api.On("LogInfo", "Caught up on missed reminder ticks.")
-		api.On("LogInfo", "Trigger reminders for "+fmt.Sprintf("%v", testTime))
+		api.On("LogDebug", "Trigger reminders for "+fmt.Sprintf("%v", testTime))
 		api.On("KVGet", string(fmt.Sprintf("%v", testTime))).Return(nil, nil)
 		defer api.AssertExpectations(t)
 
